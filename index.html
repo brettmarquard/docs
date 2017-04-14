@@ -155,7 +155,7 @@ materials (<em>app link card</em>). A user sees these cards — one or more of e
 <ul>
 <li><p><em>information card</em>: provides text for the user to read.</p></li>
 <li><p><em>suggestion card</em>: provides a specific suggestion for which the EHR renders a button that the user can click to accept. Clicking automatically populates the suggested change into the EHR&rsquo;s UI.</p></li>
-<li><p><em>app link card</em>: provides a link to a SMART app where the user can supply details, step through a flowchart, or do anything else required to help reach an informed decision. When the user has finished, flow returns to the EHR. At that point, the <strong>EHR re-triggers the initial CDS hook</strong>. The re-triggering may result in different cards, and may also include <strong>decisions</strong> (see below).</p></li>
+<li><p><em>app link card</em>: provides a link to an app (often a SMART app) where the user can supply details, step through a flowchart, or do anything else required to help reach an informed decision. When the user has finished, flow returns to the EHR. At that point, the <strong>EHR re-triggers the initial CDS hook</strong>. The re-triggering may result in different cards, and may also include <strong>decisions</strong> (see below).</p></li>
 </ul>
 
 <h2 id="cds-decisions">CDS Decisions</h2>
@@ -436,17 +436,24 @@ You can see the <a href="http://editor.swagger.io/#/?import=https://raw.githubus
       </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is an example success card."</span><span class="p">,</span><span class="w">
       </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Static CDS Service Example"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Static CDS Service Example"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.com"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
           </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Google"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://google.com"</span><span class="w">
+          </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://google.com"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"absolute"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="p">{</span><span class="w">
           </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Github"</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://github.com"</span><span class="w">
+          </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://github.com"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"absolute"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SMART Example App"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://smart.example.com/launch"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"smart"</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">]</span><span class="w">
     </span><span class="p">},</span><span class="w">
@@ -454,7 +461,7 @@ You can see the <a href="http://editor.swagger.io/#/?import=https://raw.githubus
       </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Info card"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"info"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-        </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Static CDS Service Example"</span><span class="w">
+        </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Static CDS Service Example"</span><span class="w">
       </span><span class="p">}</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">]</span><span class="w">
@@ -527,7 +534,7 @@ You can see the <a href="http://editor.swagger.io/#/?import=https://raw.githubus
 </tr>
 <tr>
 <td><code class="prettyprint">url</code></td>
-<td><em>URL</em>. An optional URL to load (via <code class="prettyprint">GET</code>, in a browser context) when a user clicks on this link to learn more about the organization or data set that provided the information on this card. Note that this URL should not be used to supply a context-specific &ldquo;drill-down&rdquo; view of the information on this card. For that, use <code class="prettyprint">link.url</code> instead.</td>
+<td><em>URL</em>. An optional absolute URL to load (via <code class="prettyprint">GET</code>, in a browser context) when a user clicks on this link to learn more about the organization or data set that provided the information on this card. Note that this URL should not be used to supply a context-specific &ldquo;drill-down&rdquo; view of the information on this card. For that, use <code class="prettyprint">link.url</code> instead.</td>
 </tr>
 </tbody></table>
 
@@ -572,6 +579,10 @@ You can see the <a href="http://editor.swagger.io/#/?import=https://raw.githubus
 <tr>
 <td><code class="prettyprint">url</code></td>
 <td><em>URL</em>. URL to load (via <code class="prettyprint">GET</code>, in a browser context) when a user clicks on this link. Note that this may be a &ldquo;deep link&rdquo; with context embedded in path segments, query parameters, or a hash. In general this URL should embed enough context for the app to determine the <code class="prettyprint">hookInstance</code>, and <code class="prettyprint">redirect</code> url upon downstream launch, because the EHR will simply use this url as-is, without appending any parameters at launch time.</td>
+</tr>
+<tr>
+<td><code class="prettyprint">type</code></td>
+<td><em>string</em>. The type of the given URL. There are two possible values for this field. A type of <code class="prettyprint">absolute</code> indicates that the URL is absolute and should be treated as-is. A type of <code class="prettyprint">smart</code> indicates that the URL is a SMART app launch URL and the EHR should ensure the SMART app launch URL is populated with the appropriate SMART launch parameters.</td>
 </tr>
 </tbody></table>
 
@@ -727,7 +738,7 @@ you should use a URI (e.g.
 <h2 id="medication-prescribe"><code class="prettyprint">medication-prescribe</code></h2>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"context"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MedicationPrescription"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MedicationOrder"</span><span class="p">,</span><span class="w">
     </span><span class="nt">"medicationCodeableConcept"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;snipped for brevity&gt;"</span><span class="w">
     </span><span class="p">}</span><span class="w">
@@ -740,7 +751,7 @@ prescribing a new medication, and solicit feedback about the
 prescription-in-progress.</p>
 
 <p><strong>Contextual data</strong>: The set of proposed medication prescriptions. using the
-FHIR <code class="prettyprint">MedicationPrescription</code> resource. See example in the sidebar.</p>
+FHIR <code class="prettyprint">MedicationOrder</code> resource. See example in the sidebar.</p>
 
 <h2 id="order-review"><code class="prettyprint">order-review</code></h2>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
