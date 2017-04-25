@@ -421,7 +421,7 @@ the data it needs to efficiently compute a set of recommendations. Each key matc
 FHIR REST API calls against the EHR server to obtain additional data ad-hoc.)</p>
 
 <aside class="notice">
-You can see the <a href="http://editor.swagger.io/#/?import=https://raw.githubusercontent.com/cds-hooks/api/master/cds-hooks.yaml?token=AATHAQY8vqQ6dIZajRuuE55EWMBitTptks5XLMk6wA%3D%3D">complete data model in Swagger</a>.
+You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercontent.com/cds-hooks/api/master/cds-hooks.yaml">complete data model in Swagger</a>.
 </aside>
 
 <h2 id="cds-service-response">CDS Service Response</h2>
@@ -508,7 +508,7 @@ You can see the <a href="http://editor.swagger.io/#/?import=https://raw.githubus
 </tr>
 <tr>
 <td><code class="prettyprint">source</code></td>
-<td><em>string</em>. grouping structure for the <strong>Source</strong> of the information displayed on this card.</td>
+<td><em>object</em>. grouping structure for the <strong>Source</strong> of the information displayed on this card. The source should be the primary source of guidance for the decision support the card represents.</td>
 </tr>
 <tr>
 <td><nobr><code class="prettyprint">suggestions</code></nobr></td>
@@ -788,6 +788,7 @@ feedback about this patient.</p>
 <li>Ask a question and participate in discussions via the <a href="https://groups.google.com/forum/#!forum/cds-hooks">CDS Hooks Google Group</a></li>
 <li>Chat via <a href="https://zulip.org/">Zulip</a> at <a href="https://chat.fhir.org">https://chat.fhir.org</a> in the <em>cds-hooks</em> stream</li>
 <li>Contribute to the <a href="https://github.com/cds-hooks">code and documentation on Github</a></li>
+<li>Check out the <a href="https://github.com/cds-hooks/docs/wiki/CDS-Services-for-testing">CDS services available for testing</a> and contribute your own.</li>
 </ul>
 
 <h2 id="cds-hooks-sprint-program">CDS Hooks Sprint Program</h2>
