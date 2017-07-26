@@ -178,7 +178,7 @@ when the EHR invokes the hook for a second time with the same
 
 <h1 id="try-it">Try it!</h1>
 
-<p>You can try CDS Hooks in our test harness at <strong><a href="http://demo.cds-hooks.org">http://demo.cds-hooks.org</a></strong></p>
+<p>You can try CDS Hooks in our test harness at <strong><a href="http://sandbox.cds-hooks.org">http://sandbox.cds-hooks.org</a></strong></p>
 
           <h1 id="cds-services">CDS Services</h1>
 
@@ -193,7 +193,7 @@ when the EHR invokes the hook for a second time with the same
   </span><span class="nt">"services"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"hook"</span><span class="p">:</span><span class="w"> </span><span class="s2">"patient-view"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Static CDS Service Example"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Static CDS Service Example"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"An example of a CDS service that returns a static set of cards"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"static-patient-greeter"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"prefetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -202,7 +202,7 @@ when the EHR invokes the hook for a second time with the same
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="nt">"hook"</span><span class="p">:</span><span class="w"> </span><span class="s2">"medication-prescribe"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Medication Echo CDS Service"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Medication Echo CDS Service"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"An example of a CDS service that simply echos the medication being prescribed"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"medication-echo"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"prefetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -251,8 +251,8 @@ when the EHR invokes the hook for a second time with the same
 <td><em>string</em> or <em>url</em>. The hook this service should be invoked on. See <a href="#hook-catalog">Hook Catalog</a></td>
 </tr>
 <tr>
-<td><code class="prettyprint">name</code></td>
-<td><em>string</em>.  The name of this service</td>
+<td><code class="prettyprint">title</code></td>
+<td><em>string</em>.  The human-friendly name of this service</td>
 </tr>
 <tr>
 <td><nobr><code class="prettyprint">description</code></nobr></td>
@@ -436,12 +436,13 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"cards"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Success Card"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is an example success card."</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Example Card"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"info"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is an example card."</span><span class="p">,</span><span class="w">
       </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Static CDS Service Example"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.com"</span><span class="w">
+        </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.com"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"icon"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.com/img/icon-100px.png"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
@@ -462,8 +463,8 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
       </span><span class="p">]</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Info card"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"info"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Another card"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"warning"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Static CDS Service Example"</span><span class="w">
       </span><span class="p">}</span><span class="w">
@@ -504,11 +505,11 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 </tr>
 <tr>
 <td><code class="prettyprint">detail</code></td>
-<td><em>string</em>.  optional detailed information to display, represented in Markdown. (For non-urgent cards, the EHR may hide these details until the user clicks a link like &ldquo;view more details&hellip;&rdquo;.)</td>
+<td><em>string</em>.  optional detailed information to display, represented in <a href="https://github.github.com/gfm/">(GitHub Flavored) Markdown</a>. (For non-urgent cards, the EHR may hide these details until the user clicks a link like &ldquo;view more details&hellip;&rdquo;.)</td>
 </tr>
 <tr>
 <td><code class="prettyprint">indicator</code></td>
-<td><em>string</em>.  urgency/importance of what this card conveys. Allowed values, in order of increasing urgency, are: <code class="prettyprint">success</code>, <code class="prettyprint">info</code>, <code class="prettyprint">warning</code>, <code class="prettyprint">hard-stop</code>. The EHR can use this field to help make UI display decisions such as sort order or coloring. The value <code class="prettyprint">hard-stop</code> indicates that the workflow should not be allowed to proceed.</td>
+<td><em>string</em>.  urgency/importance of what this card conveys. Allowed values, in order of increasing urgency, are: <code class="prettyprint">info</code>, <code class="prettyprint">warning</code>, <code class="prettyprint">hard-stop</code>. The EHR can use this field to help make UI display decisions such as sort order or coloring. The value <code class="prettyprint">hard-stop</code> indicates that the workflow should not be allowed to proceed.</td>
 </tr>
 <tr>
 <td><code class="prettyprint">source</code></td>
@@ -539,6 +540,10 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 <tr>
 <td><code class="prettyprint">url</code></td>
 <td><em>URL</em>. An optional absolute URL to load (via <code class="prettyprint">GET</code>, in a browser context) when a user clicks on this link to learn more about the organization or data set that provided the information on this card. Note that this URL should not be used to supply a context-specific &ldquo;drill-down&rdquo; view of the information on this card. For that, use <code class="prettyprint">link.url</code> instead.</td>
+</tr>
+<tr>
+<td><code class="prettyprint">icon</code></td>
+<td><em>URL</em>. An optional absolute URL to an icon for the source of this card. The icon returned by this URL should be in PNG format, an image size of 100x100 pixels, and must not include any transparent regions.</td>
 </tr>
 </tbody></table>
 
@@ -607,6 +612,18 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 <td><em>array</em> of <em>strings</em>. id(s) of any resources to remove from the current activity (e.g. for the <code class="prettyprint">order-review</code> activity, this would provide a way to remove orders from the pending list). In activities like <code class="prettyprint">medication-prescribe</code> where only one &ldquo;content&rdquo; resource is ever relevant, this field may be omitted.</td>
 </tr>
 </tbody></table>
+
+<h3 id="no-decision-support">No Decision Support</h3>
+
+<blockquote>
+<p>Response when no decision support is necessary for the user</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"cards"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>If your CDS Service has no decision support for the user, your service should return a 200 HTTP response with an empty array of cards.</p>
 
 <h1 id="analytics">Analytics</h1>
 
@@ -723,6 +740,40 @@ keys match the request keys (<code class="prettyprint">p</code> and <code class=
 <p>Note that a missing key indicates that an EHR has not attempted to supply a
 given prefetch value; the CDS service can issue the request manually at call
 time to fetch the required data.&ldquo;</p>
+
+          <h1 id="security">Security</h1>
+
+<h2 id="cross-origin-resource-sharing">Cross-Origin Resource Sharing</h2>
+
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS">Cross-origin resource sharing (CORS)</a> is web security mechanism that is built into browsers. In short, CORS allows servers to control how browsers access resources on the server, including the accessible HTTP response headers. CORS is only honored by web browsers and as such, is a client-side security mechanism.</p>
+
+<p>For CDS Services, implementing CORS is required if your CDS Service is to be called from a web browser. As the <a href="http://sandbox.cds-hooks.org">CDS Hooks Sandbox</a> is a browser application, you must implement CORS to test your CDS Service in the CDS Hooks Sandbox.</p>
+
+<p>You should carefully consider how you support CORS, but a quick starting point for testing would be to ensure your CDS Service returns the following HTTP headers:</p>
+
+<table><thead>
+<tr>
+<th>Header</th>
+<th>Value</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Access-Control-Allow-Credentials</td>
+<td>true</td>
+</tr>
+<tr>
+<td>Access-Control-Allow-Methods</td>
+<td>GET, POST, OPTIONS</td>
+</tr>
+<tr>
+<td>Access-Control-Allow-Origin</td>
+<td>*</td>
+</tr>
+<tr>
+<td>Access-Control-Expose-Headers</td>
+<td>Origin, Accept, Content-Location, Location, X-Requested-With</td>
+</tr>
+</tbody></table>
 
           <h1 id="hook-catalog">Hook Catalog</h1>
 
