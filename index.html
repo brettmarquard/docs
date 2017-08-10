@@ -146,7 +146,7 @@ The CDS Hooks API is still in active development and thus subject to change. We&
 context (via the <code class="prettyprint">context</code> parameter of the hook) plus whatever
 service-specific data are required (via the <code class="prettyprint">pre-fetch-template</code> parameter).</p>
 
-<p><img alt="CDS Hooks Overview" src="images/overview-with-decisions.png" /></p>
+<p><img alt="CDS Hooks Overview" src="images/overview.png" /></p>
 
 <h2 id="cds-cards">CDS Cards</h2>
 
@@ -517,7 +517,7 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 </tr>
 <tr>
 <td><nobr><code class="prettyprint">suggestions</code></nobr></td>
-<td><em>array</em> of <strong>Suggestions</strong>, which allow a service to suggest a set of changes in the context of the current activity (e.g.  changing the dose of the medication currently being prescribed, for the <code class="prettyprint">medication-prescribe</code> activity)</td>
+<td><em>array</em> of <strong>Suggestions</strong>, which allow a service to suggest a set of changes in the context of the current activity (e.g.  changing the dose of the medication currently being prescribed, for the <code class="prettyprint">medication-prescribe</code> activity). Note that suggestions are implicitly OR&rsquo;d.</td>
 </tr>
 <tr>
 <td><code class="prettyprint">links</code></td>
@@ -564,12 +564,30 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 <td><em>string</em>. unique identifier for this suggestion. For details see <a href="#analytics">Suggestion Tracking Analytics</a></td>
 </tr>
 <tr>
-<td><nobr><code class="prettyprint">create</code></nobr></td>
-<td><em>string</em>. new resource(s) that this suggestion applies within the current activity (e.g. for <code class="prettyprint">medication-prescribe</code>, this holds the updated prescription as proposed by the suggestion).</td>
+<td><code class="prettyprint">actions</code></td>
+<td><em>array</em>. array of objects, each defining a suggested action. Within a suggestion, all actions are logically AND&rsquo;d together, such that a user selecting a suggestion selects all of the actions within it.</td>
+</tr>
+</tbody></table>
+
+<p>Each <strong>Action</strong> is described by the following attributes.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">type</code></td>
+<td><em>string</em>. The type of action being performed. Allowed values are: <code class="prettyprint">create</code>, <code class="prettyprint">update</code>, <code class="prettyprint">delete</code>.</td>
 </tr>
 <tr>
-<td><code class="prettyprint">delete</code></td>
-<td><em>string</em>. id(s) of any resources to remove from the current activity (e.g. for the <code class="prettyprint">order-review</code> activity, this would provide a way to remove orders from the pending list). In activities like <code class="prettyprint">medication-prescribe</code> where only one &ldquo;content&rdquo; resource is ever relevant, this field may be omitted.</td>
+<td><code class="prettyprint">description</code></td>
+<td><em>string</em>. human-readable description of the suggested action. May be presented to the end-user.</td>
+</tr>
+<tr>
+<td><code class="prettyprint">resource</code></td>
+<td><em>object</em>. depending upon the <code class="prettyprint">type</code> attribute, new resource(s) or id(s) of resources. For a type of <code class="prettyprint">create</code>, the <code class="prettyprint">resource</code> attribute contains new FHIR resources to apply within the current activity (e.g. for <code class="prettyprint">medication-prescribe</code>, this holds the updated prescription as proposed by the suggestion).  For <code class="prettyprint">delete</code>, id(s) of any resources to remove from the current activity (e.g. for the <code class="prettyprint">order-review</code> activity, this would provide a way to remove orders from the pending list). In activities like <code class="prettyprint">medication-prescribe</code> where only one &ldquo;content&rdquo; resource is ever relevant, this field may be omitted. For <code class="prettyprint">update</code>, existing resources to modify from the current activity (e.g. for the <code class="prettyprint">order-review</code> activity, this would provide a way to annotate an order from the pending list with an assessment). This field may be omitted.</td>
 </tr>
 </tbody></table>
 
@@ -645,10 +663,10 @@ up-front. The CDS Service could then request any data it needed via the EHR&rsqu
 FHIR REST API.</p>
 
 <p>But CDS services must respond quickly (on the order of 500 ms), and so we
-provide a performance tweak that allows an app to register a set of &ldquo;prefetch
+provide a performance tweak that allows a CDS Service to register a set of &ldquo;prefetch
 templates&rdquo; with the EHR ahead of time.</p>
 
-<p>The prefetch templates are a dictionary <code class="prettyprint">read</code> and <code class="prettyprint">search</code> requests to supply
+<p>The prefetch templates are a dictionary of <code class="prettyprint">read</code> and <code class="prettyprint">search</code> requests to supply
 relevant data, where the following variables are defined:</p>
 
 <table><thead>
@@ -667,21 +685,28 @@ relevant data, where the following variables are defined:</p>
 </tr>
 </tbody></table>
 
-<p>Before calling the CDS Service, the EHR will fill out this template, replacing
-<code class="prettyprint">{{Patient.id}}</code> with the id of the current patient (e.g. <code class="prettyprint">123</code>) inside of any
-URL strings. The EHR then executes the requests in the template as a set of
-FHIR <code class="prettyprint">read</code> and <code class="prettyprint">search</code> operations (exactly as though they had been submitted
-to the server&rsquo;s &ldquo;transaction&rdquo; endpoint as a FHIR batch-type bundle).</p>
+<p>An EHR <em>may</em> choose to honor some or all of the desired prefetch templates from an appropriate source. For example:</p>
+
+<ul>
+<li>The EHR may have some of the desired prefetched data already in memory, thereby removing the need for any network call</li>
+<li>The EHR may compute an efficient set of prefetch templates from multiple CDS Services, thereby reducing the number of network calls to a minimum</li>
+<li>The EHR may satisfy some of the desired prefetched templates via some internal service or even its own FHIR server</li>
+</ul>
+
+<p>Regardless of how the EHR satisfies the prefetched templates (if at all), it is important that the prefetched data given to the CDS Service is equivalent to the CDS Service making its own call to the EHR FHIR server, where <code class="prettyprint">{{Patient.id}}</code> is replaced with the id of the current patient (e.g. <code class="prettyprint">123</code>) inside of any URL strings and using <code class="prettyprint">read</code> and <code class="prettyprint">search</code> operations to the server&rsquo;s &ldquo;transaction&rdquo; endpoint as a FHIR batch-type bundle.</p>
 
 <p>The resulting response, which must be rendered in a single page — no &ldquo;next
 page&rdquo; links allowed — is passed along to the CDS Service using the
-<code class="prettyprint">prefetch</code> parameter (see below for a complete example).</p>
+<code class="prettyprint">prefetch</code> parameter (see below for a complete example). </p>
+
+<p>The CDS Service must not receive any prefetch template key that the EHR chooses not to satisfy. Additionally, if the EHR encounters an error while retrieving any prefetched data, the prefetch template key should not be sent to the CDS Service. It is the CDS Service&rsquo;s responsibility to check to see what prefetched data was satisfied (if any) and manually retrieve any necessary data.</p>
 
 <h2 id="example-prefetch-request">Example prefetch request</h2>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"prefetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"p"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/{{Patient.id}}"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"a1c"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Observation?patient={{Patient.id}}&amp;code=4548-4&amp;_count=1&amp;sort:desc=date"</span><span class="w">
+    </span><span class="nt">"a1c"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Observation?patient={{Patient.id}}&amp;code=4548-4&amp;_count=1&amp;sort:desc=date"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"u"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Practitioner/{{User.id}}"</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
@@ -689,10 +714,25 @@ page&rdquo; links allowed — is passed along to the CDS Service using the
 <p>Here is an example prefetch property from a CDS service discovery endpoint. The
 goal is to know, at call time:</p>
 
-<ul>
-<li>Patient demographics</li>
-<li>Most recent Hemoglobin A1c reading for this patient</li>
-</ul>
+<table><thead>
+<tr>
+<th>Key</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">p</code></td>
+<td>Patient demographics</td>
+</tr>
+<tr>
+<td><code class="prettyprint">a1c</code></td>
+<td>Most recent Hemoglobin A1c reading for this patient</td>
+</tr>
+<tr>
+<td><code class="prettyprint">u</code></td>
+<td>Information on the current user (Practitioner)</td>
+</tr>
+</tbody></table>
 
 <h2 id="example-prefetch-response">Example prefetch response</h2>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -737,9 +777,21 @@ goal is to know, at call time:</p>
 <p>The response is augmented to include two prefetch values, where the dictionary
 keys match the request keys (<code class="prettyprint">p</code> and <code class="prettyprint">a1c</code> in this case).</p>
 
-<p>Note that a missing key indicates that an EHR has not attempted to supply a
-given prefetch value; the CDS service can issue the request manually at call
-time to fetch the required data.&ldquo;</p>
+<p>Note that the missing <code class="prettyprint">u</code> key indicates that either the EHR has decided not to satisfy this particular prefetch template or it was not able to retrieve this prefetched data. The CDS Service is responsible for retrieving this Practitioner data from the FHIR server (if required).</p>
+
+<h2 id="prefetch-query-restrictions">Prefetch query restrictions</h2>
+
+<p>To reduce the implementation burden on EHRs that support CDS services, CDS Hooks recommends that prefetch queries only use a subset of the full functionality available in the FHIR specification. Valid prefetch URLs should only contain:</p>
+
+<ul>
+<li><em>instance</em> level <a href="https://www.hl7.org/fhir/http.html#read">read</a> interactions (for resources with known ids such as <code class="prettyprint">Patient</code> and <code class="prettyprint">Practitioner</code>)</li>
+<li><em>type</em> level <a href="https://www.hl7.org/fhir/http.html#search">search</a> interactions</li>
+<li>Patient references (e.g. <code class="prettyprint">patient={{Patient}}</code>)</li>
+<li><em>token</em> search parameters using equality (e.g. <code class="prettyprint">code=4548-4</code>) and optionally the <code class="prettyprint">:in</code> modifier (no other modifiers for token parameters)</li>
+<li><em>date</em> search parameters on <code class="prettyprint">date</code>, <code class="prettyprint">dateTime</code>, <code class="prettyprint">instant</code>, or <code class="prettyprint">Period</code> types only, and using only the prefixes <code class="prettyprint">eq</code>, <code class="prettyprint">lt</code>, <code class="prettyprint">gt</code>, <code class="prettyprint">ge</code>, <code class="prettyprint">le</code></li>
+<li>the <code class="prettyprint">_count</code> parameter to limit the number of results returned</li>
+<li>the <code class="prettyprint">_sort</code> parameter to allow for <em>most recent</em> and <em>first</em> queries</li>
+</ul>
 
           <h1 id="security">Security</h1>
 
@@ -863,6 +915,229 @@ feedback about this patient.</p>
 <li><strong><a href="https://github.com/cds-hooks/cds-hooks/labels/help%20wanted">help-wanted issues</a></strong></li>
 <li><strong><a href="https://github.com/cds-hooks/cds-hooks/milestones">Proposed Milestones</a></strong></li>
 </ul>
+
+          <h1 id="examples">Examples</h1>
+
+<h2 id="cdc-guideline-for-prescribing-opioids-for-chronic-pain">CDC Guideline for Prescribing Opioids for Chronic Pain</h2>
+
+<blockquote>
+<p>CDS Service Request</p>
+
+<p>The example illustrates a prescription for Acetaminophen/Hydrocodone Bitartrate for a patient that already has a prescription for Oxycodone Hydrochloride:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"hookInstance"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d1577c69-dfbe-44ad-ba6d-3e05e953b2ea"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"fhirServer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://fhir.example.com"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"hook"</span><span class="p">:</span><span class="w"> </span><span class="s2">"medication-prescribe"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Practitioner/example"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"context"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MedicationOrder"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"medrx001"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"dateWritten"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-05-05"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draft"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"patient"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"medicationCodeableConcept"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"coding"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://www.nlm.nih.gov/research/umls/rxnorm"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"857001"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"display"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Acetaminophen 325 MG / Hydrocodone Bitartrate 10 MG Oral Tablet"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">]</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"dosageInstruction"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Take 1 tablet Oral every 4 hours as needed"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"timing"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"repeat"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"frequency"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"frequencyMax"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"period"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"asNeededBoolean"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"doseQuantity"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mg"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://unitsofmeasure.org"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mg"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"patient"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"prefetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"medication"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"response"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"200 OK"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"resource"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MedicationOrder"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"medrx002"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"dateWritten"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-04-25"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"active"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"patient"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"medicationCodeableConcept"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"coding"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://www.nlm.nih.gov/research/umls/rxnorm"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1049621"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"display"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Oxycodone Hydrochloride 5 MG Oral Tablet"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"dosageInstruction"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Take 1 tablet by mouth every 4 hours as needed for pain."</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"timing"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"repeat"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nt">"frequency"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+                </span><span class="nt">"period"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+                </span><span class="nt">"periodUnits"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d"</span><span class="w">
+              </span><span class="p">}</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nt">"asNeededBoolean"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"doseQuantity"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mg"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://unitsofmeasure.org"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mg"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">]</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>This example illustrates the use of the CDS Hooks <code class="prettyprint">medication-prescribe</code> hook to implement Recommendation #5 from the <a href="https://guidelines.gov/summaries/summary/50153/cdc-guideline-for-prescribing-opioids-for-chronic-pain---united-states-2016#420">CDC guideline for prescribing opioids for chronic pain</a>.</p>
+
+<p>This example is taken from the <a href="http://build.fhir.org/ig/cqframework/opioid-cds/">Opioid Prescribing Support Implementation Guide</a>, developed in partnership with the Centers for Disease Control and Prevention <a href="https://www.cdc.gov/">(CDC)</a>.</p>
+
+<blockquote>
+<p>CDS Service Response</p>
+
+<p>The opioid guideline request results in the following response that indicates the patient is at high risk for opioid overdose according to the CDC guidelines, and the dosage should be tapered to less than 50 MME. Links are provided to the guideline, as well as to the MME conversion tables provided by CDC.</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"High risk for opioid overdose - taper now"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"warning"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CDC guideline for prescribing opioids for chronic pain"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"absolute"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://guidelines.gov/summaries/summary/50153/cdc-guideline-for-prescribing-opioids-for-chronic-pain---united-states-2016#420"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MME Conversion Tables"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"absolute"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://www.cdc.gov/drugoverdose/pdf/calculating_total_daily_dose-a.pdf"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Total morphine milligram equivalent (MME) is 125mg. Taper to less than 50."</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<h2 id="radiology-appropriateness">Radiology Appropriateness</h2>
+
+<blockquote>
+<p>CDS Service Request</p>
+
+<p>This example illustrates the use of the CDS Hooks <code class="prettyprint">order-review</code> hook to implement Radiology Appropriateness scoring.</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"hookInstance"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d1577c69-dfbe-44ad-ba6d-3e05e953b2ea"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"fhirServer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://fhir.example.com"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"hook"</span><span class="p">:</span><span class="w"> </span><span class="s2">"order-review"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Practitioner/example"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"context"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ProcedureRequest"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"procedure-request-1"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draft"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"intent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"proposal"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"priority"</span><span class="p">:</span><span class="w"> </span><span class="s2">"routine"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"coding"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w">
+          </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://www.ama-assn.org/go/cpt"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"70450"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"display"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CT, head, wo iv contrast"</span><span class="w">
+        </span><span class="p">}]</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"subject"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"requester"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"agent"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Practitioner/exampmle"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"patient"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>CDS Service Response</p>
+
+<p>The appropriateness score is communicated via an update of the procedure request that adds an extension element to indicate the appropriateness rating.</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"cards"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Usually appropriate"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"info"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The requested procedure is usually appropriate for the given indications."</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"suggestions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The appropriateness score for this procedure given these indications is 9, usually appropriate."</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w">
+            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"update"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Update the order to record the appropriateness score."</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"resource"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ProcedureRequest"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"procedure-request-1"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"extension"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="p">{</span><span class="w">
+                  </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://hl7.org/fhir/us/qicore/StructureDefinition/procedurerequest-appropriatenessScore"</span><span class="p">,</span><span class="w">
+                  </span><span class="nt">"valueDecimal"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9"</span><span class="w">
+                </span><span class="p">}</span><span class="w">
+              </span><span class="p">],</span><span class="w">
+              </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draft"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"intent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"proposal"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"priority"</span><span class="p">:</span><span class="w"> </span><span class="s2">"routine"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nt">"coding"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w">
+                  </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://www.ama-assn.org/go/cpt"</span><span class="p">,</span><span class="w">
+                  </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"70450"</span><span class="p">,</span><span class="w">
+                  </span><span class="nt">"display"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CT, head, wo iv contrast"</span><span class="w">
+                </span><span class="p">}]</span><span class="w">
+              </span><span class="p">},</span><span class="w">
+              </span><span class="nt">"subject"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="w">
+              </span><span class="p">},</span><span class="w">
+              </span><span class="nt">"requester"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nt">"agent"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                  </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Practitioner/exampmle"</span><span class="w">
+                </span><span class="p">}</span><span class="w">
+              </span><span class="p">}</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">}]</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
 
       </div>
       <div class="dark-box">
